@@ -4,7 +4,7 @@
 #include <time.h>
 #include<string.h>
 #include <thread>
-#define screen_x 44
+#define screen_x 50
 #define screen_y 35
 #define borderxstart 3
 #define borderxend 16
@@ -26,6 +26,11 @@ COORD characterPos = { 0,0 };
 long score = 0;
 int BlockNum = rand() % 7;
 int rotation = 0;
+int checkleft = 0;
+int checkright = 0;
+int checkmiddle = 0;
+int checkmiddleright = 0;
+int checkmiddleleft = 0;
 struct BlockTemp
 {
 	char px[17];
@@ -92,7 +97,7 @@ void clear_buffer() {
 
 void TETRIS() {
 	int color = 0;
-	int nextword = 1;
+	int nextword = 4;
 	int row = 2;
 	int something[6][6][6]{
 		{//T
@@ -183,8 +188,8 @@ void Board() {
 
 void ScoreBoard() {
 	for (int y = 0; y < 5; ++y) {
-		for (int x = 20; x < 40; ++x) {
-			if ((x > 20 && x < 39) && (y > 0 && y < 4)) continue;
+		for (int x = 23; x < 43; ++x) {
+			if ((x > 23 && x < 42) && (y > 0 && y < 4)) continue;
 			consoleBuffer[x + screen_x * y].Char.AsciiChar = '#';
 			consoleBuffer[x + screen_x * y].Attributes = 119;
 		}
@@ -192,9 +197,9 @@ void ScoreBoard() {
 }
 
 void point(long* point) {
-	gotoxy(22, 2);
+	gotoxy(25, 2);
 	setcolor(7, 0);
-	printf("score = %ld", *point);
+	printf("score = %d", *point);
 }
 int level(int deb) {
 	char a[9] = "Level : ";
@@ -208,53 +213,27 @@ int level(int deb) {
 	else if (deb == 100) j = 7;
 	else if (deb == 75) j = 8;
 	else if (deb == 50) j = 9;
-	for (int y = 7; y < 12; y++) {
-		for (int x = 20; x < 40; x++) {
-			if ((x > 20 && x < 39) && (y > 7 && y < 11)) continue;
+	for (int y = 9; y < 14; y++) {
+		for (int x = 23; x < 43; x++) {
+			if ((x > 23 && x < 42) && (y > 9 && y < 13)) continue;
 			consoleBuffer[x + screen_x * y].Char.AsciiChar = '#';
 			consoleBuffer[x + screen_x * y].Attributes = 119;
 		}
 	}
 	for (int i = 0; i < 8; i++) {
-		consoleBuffer[25 + i + screen_x * 9].Char.AsciiChar = a[i];
-		consoleBuffer[25 + i + screen_x * 9].Attributes = 7;
+		consoleBuffer[28 + i + screen_x * 11].Char.AsciiChar = a[i];
+		consoleBuffer[28 + i + screen_x * 11].Attributes = 7;
 	}
-	consoleBuffer[32 + screen_x * 9].Char.AsciiChar = j + '0';
-	consoleBuffer[32 + screen_x * 9].Attributes = 7;
+	consoleBuffer[35 + screen_x * 11].Char.AsciiChar = j + '0';
+	consoleBuffer[35 + screen_x * 11].Attributes = 7;
 	return j;
 }
-
-int nextlevel(long* point) {
-	char a[14] = "Next level in";
-	long b = 2500;
-	for (int y = 14; y < 21; y++) {
-		for (int x = 20; x < 40; x++) {
-			if ((x > 20 && x < 39) && (y > 14 && y < 20)) continue;
-			consoleBuffer[x + screen_x * y].Char.AsciiChar = '#';
-			consoleBuffer[x + screen_x * y].Attributes = 119;
-		}
-	}for (int i = 0; i < 14; i++) {
-		consoleBuffer[23 + i + screen_x * 16].Char.AsciiChar = a[i];
-		consoleBuffer[23 + i + screen_x * 16].Attributes = 7;
-	}
-	if (*point >= 1500000) b = -1;
-	else if (*point >= 750000) b = 1500000;
-	else if (*point >= 350000) b = 750000;
-	else if (*point >= 100000) b = 350000;
-	else if (*point >= 50000) b = 100000;
-	else if (*point >= 25000) b = 50000;
-	else if (*point >= 10000) b = 25000;
-	else if (*point >= 2500) b = 10000;
-	if(b!=-1) b = b - *point;
-	return b;
-	
-}
-void pausemenu(bool* pause, bool* play, bool* startmenuloop,long nl) {
+void pausemenu(bool* pause, bool* play, bool* startmenuloop) {
 	DWORD numEvents = 0;
 	DWORD numEventsRead = 0;
 	for (int y = 22; y < 30; y++) {
-		for (int x = 20; x < 40; x++) {
-			if ((y > 22 && y < 29) && (x > 20 && x < 39))continue;
+		for (int x = 23; x < 43; x++) {
+			if ((y > 22 && y < 29) && (x > 23 && x < 42))continue;
 			else {
 				consoleBuffer[x + screen_x * y].Char.AsciiChar = '#';
 				consoleBuffer[x + screen_x * y].Attributes = 119;
@@ -262,17 +241,18 @@ void pausemenu(bool* pause, bool* play, bool* startmenuloop,long nl) {
 		}
 	}
 	fill_buffer_to_console();
-	gotoxy(21, 23);
+	gotoxy(24, 23);
 	setcolor(7, 0);
 	printf("------PAUSE-------");
-	gotoxy(22, 26);
+	gotoxy(25, 26);
 	printf("RESUME");
-	gotoxy(33, 26);
+	gotoxy(36, 26);
 	printf("EXIT");
 	while (*pause) {
 		GetNumberOfConsoleInputEvents(rHnd, &numEvents);
 
 		if (numEvents != 0) {
+			setcolor(7, 0);
 			INPUT_RECORD* eventBuffer = new INPUT_RECORD[numEvents];
 			ReadConsoleInput(rHnd, eventBuffer, numEvents, &numEventsRead);
 			for (DWORD i = 0; i < numEventsRead; ++i) {
@@ -293,7 +273,7 @@ void pausemenu(bool* pause, bool* play, bool* startmenuloop,long nl) {
 					int posx = eventBuffer[i].Event.MouseEvent.dwMousePosition.X;
 					int posy = eventBuffer[i].Event.MouseEvent.dwMousePosition.Y;
 					if (eventBuffer[i].Event.MouseEvent.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED) {
-						if (posx >= 22 && posx <= 27 && posy == 26) {
+						if (posx >= 25 && posx <= 30 && posy == 26) {
 							*pause = false;
 							for (int i = 3; i > 0; i--) {
 								gotoxy(9, 10);
@@ -305,28 +285,28 @@ void pausemenu(bool* pause, bool* play, bool* startmenuloop,long nl) {
 							printf(" ");
 
 						}
-						else if (posx >= 33 && posx <= 36 && posy == 26) {
+						else if (posx >= 36 && posx <= 39 && posy == 26) {
 							*pause = false;
 							*play = false;
 							*startmenuloop = false;
 						}
 					}
 					else if (eventBuffer[i].Event.MouseEvent.dwEventFlags & MOUSE_MOVED) {
-						if (posx >= 22 && posx <= 27 && posy == 26) {
-							gotoxy(22, 26);
+						if (posx >= 25 && posx <= 30 && posy == 26) {
+							gotoxy(25, 26);
 							setcolor(0, 7);
 							printf("RESUME");
 						}
-						else if (posx >= 33 && posx <= 36 && posy == 26) {
-							gotoxy(33, 26);
+						else if (posx >= 36 && posx <= 39 && posy == 26) {
+							gotoxy(36, 26);
 							setcolor(0, 7);
 							printf("EXIT");
 						}
 						else {
 							setcolor(7, 0);
-							gotoxy(22, 26);
+							gotoxy(25, 26);
 							printf("RESUME");
-							gotoxy(33, 26);
+							gotoxy(36, 26);
 							printf("EXIT");
 						}
 					}
@@ -335,14 +315,10 @@ void pausemenu(bool* pause, bool* play, bool* startmenuloop,long nl) {
 			}
 			delete[] eventBuffer;
 		}point(&score);
-		gotoxy(23, 18);
-		setcolor(7, 0);
-		if (nl != -1) printf("%ld", nl);
-		else if (nl == -1) printf("  LEVEL MAX");
 	}
 	for (int y = 22; y < 30; y++) {
-		for (int x = 20; x < 40; x++) {
-			if ((y > 22 && y < 29) && (x > 20 && x < 39))continue;
+		for (int x = 23; x < 43; x++) {
+			if ((y > 22 && y < 29) && (x > 23 && x < 32))continue;
 			else {
 				consoleBuffer[x + screen_x * y].Char.AsciiChar = ' ';
 				consoleBuffer[x + screen_x * y].Attributes = 7;
@@ -475,6 +451,7 @@ int Block(int bnum, int rotation, int x, int y, int d) {
 						else {
 							if (cursor(x + x1, y + y1 + 4) == '#') {
 								return 1;
+
 							}
 						}
 					}
@@ -546,6 +523,173 @@ int Block(int bnum, int rotation, int x, int y, int d) {
 	return 0;
 }
 
+int BLOCKTEMP(int bnum, int rotation, int x, int y, int d) {
+	checkleft = 0;
+	checkright = 0;
+	checkmiddle = 0;
+	checkmiddleright = 0;
+	checkmiddleleft = 0;
+	char dc;
+	int colorblock = 0;
+	if (d == 0) dc = 'O';
+	else if (d == 2) dc = '#';
+	else dc = ' ';
+	if (bnum == 0) colorblock = 102;
+	else if (bnum == 1) colorblock = 170;
+	else if (bnum == 2) colorblock = 204;
+	else if (bnum == 3) colorblock = 153;
+	else if (bnum == 4) colorblock = 238;
+	else if (bnum == 5) colorblock = 17;
+	else if (bnum == 6) colorblock = 221;
+	if (d == 1) colorblock = 0;
+	int clearb[4][4] = {
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,0}
+	};
+	int block[7][4][4] = {
+		{
+			//l
+			{0,0,0,0},
+			{0,1,0,0},
+			{0,1,0,0},
+			{0,1,1,0}
+		},
+		{
+			//S
+			{0,0,0,0},
+			{0,1,0,0},
+			{0,1,1,0},
+			{0,0,1,0}
+
+		},
+		{
+			//Z
+			{0,0,0,0},
+			{0,0,1,0},
+			{0,1,1,0},
+			{0,1,0,0}
+		},
+		{
+			//I
+			{0,0,0,0},
+			{0,0,0,0},
+			{1,1,1,1},
+			{0,0,0,0}
+		},
+		{
+			//O
+			{0,0,0,0},
+			{0,1,1,0},
+			{0,1,1,0},
+			{0,0,0,0}
+		},
+		{
+			//J
+			{0,0,0,0},
+			{0,0,1,0},
+			{0,0,1,0},
+			{0,1,1,0}
+		},
+		{
+			//T
+			{0,0,0,0},
+			{0,1,0,0},
+			{1,1,1,0},
+			{0,0,0,0}
+		},
+	};
+	int x1 = 0, y1 = 0;
+	for (int check = 0; check < 1; check++) {
+		if (rotation == 0) {
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 4; j++) {
+					x1++;
+					if (block[bnum][i][j] == 1) {
+						if (x + x1 == 2) {
+							checkleft = 1;
+						}
+						else if (x + x1 == 16) {
+							checkright = 1;
+						}
+						else if (cursor(x + x1, y + y1+4) == '#') checkmiddle = 1;
+						
+
+					}
+				}
+				x1 = 0;
+				y1++;
+			}
+		}
+		else if (rotation == 1) {
+			for (int j = 0; j < 4; j++) {
+				for (int i = 3; i >= 0; i--) {
+					x1++;
+					if (block[bnum][i][j] == 1) {
+						if (x + x1 == 2) {
+							checkleft = 1;
+						}
+						else if (x + x1 == 16) {
+							checkright = 1;
+						}
+						else if (cursor(x + x1, y + y1 + 4) == '#') { 
+							checkmiddle = 1; 
+							if (x1 == 0 || x1 == 1) checkmiddleleft = 1;
+							else if (x1 == 2 || x1 == 3) checkmiddleright = 1;
+						}
+					}
+				}
+				x1 = 0;
+				y1++;
+			}
+		}
+		else if (rotation == 2) {
+			for (int i = 3; i >= 0; i--) {
+				for (int j = 3; j >= 0; j--) {
+					x1++;
+					if (block[bnum][i][j] == 1) {
+						if (cursor(x + x1, y + y1 + 4) == '#') {
+							if (x + x1 == 2) {
+								checkleft = 1;
+							}
+							else if (x + x1 == 16) {
+								checkright = 1;
+							}
+							else if (cursor(x + x1, y + y1+4) == '#') checkmiddle = 1;
+						}
+
+					}
+				}
+				x1 = 0;
+				y1++;
+			}
+		}
+		else if (rotation == 3) {
+
+			for (int j = 3; j >= 0; j--) {
+				for (int i = 0; i < 4; i++) {
+					x1++;
+					if (block[bnum][i][j] == 1) {
+						if (cursor(x + x1, y + y1) == '#') {
+							if (x + x1 == 2) {
+								checkleft = 1;
+							}
+							else if (x + x1 == 16) {
+								checkright = 1;
+							}
+							else if (cursor(x + x1, y + y1+4) == '#') checkmiddle = 1;
+						}
+
+					}
+				}
+				x1 = 0;
+				y1++;
+			}
+		}
+	}
+	return 0;
+}
 void fonts(int a, int b) {
 	int newWidth = a, newHeight = b;
 	CONSOLE_FONT_INFOEX fontStructure = { 0 };
@@ -575,8 +719,6 @@ int blockcheck() {
 			check++;
 			for (int x = 3; x < 17; ++x) {
 				if ((x >= 3 && x < 16) && (y > 0 && y < 29)) {
-					//consoleBuffer[x + screen_x * y].Char.AsciiChar = ' ';
-					//consoleBuffer[x + screen_x * y].Attributes = 7;
 					bt[y].px[x] = ' ';
 					bt[y].cb[x] = 7;
 				}
@@ -616,10 +758,6 @@ void BlockTransition() {
 				}
 				else break;
 			}
-			/*setcolor(7, 0);
-			gotoxy(10, 10);
-			printf("%d", count);
-			Sleep(5000);*/
 		}
 		for (int y1 = y; y1 >= 1; y1--) {
 			for (int x = 3; x < 16; ++x) {
@@ -731,8 +869,8 @@ void gameoverdisplay(bool* gameover) {
 				for (int y = 0; y < 6; y++) {
 					for (int x = 0; x < 6; x++) {
 						if (GAMEOVER[i][y][x] == 1) {
-							consoleBuffer[x + 1 + nextword + screen_x * (y + 5 + 2 + nextbar)].Char.AsciiChar = 'O';
-							consoleBuffer[x + 1 + nextword + screen_x * (y + 5 + 2 + nextbar)].Attributes = icc[ic];
+							consoleBuffer[x + 5 + nextword + screen_x * (y + 5 + 2 + nextbar)].Char.AsciiChar = 'O';
+							consoleBuffer[x + 5 + nextword + screen_x * (y + 5 + 2 + nextbar)].Attributes = icc[ic];
 						}
 					}
 				}
@@ -741,10 +879,10 @@ void gameoverdisplay(bool* gameover) {
 			fill_buffer_to_console();
 			ic = (ic + 1) % 2;
 			deb = 0;
-			gotoxy(11, 23);
+			gotoxy(14, 23);
 			setcolor(7, 0);
 			printf("Your score is : %d", score);
-			gotoxy(12,25);
+			gotoxy(16, 25);
 			printf("Press esc to menu");
 		}
 		GetNumberOfConsoleInputEvents(rHnd, &numEvents);
@@ -787,33 +925,33 @@ void leaderboard() {
 	clear_buffer();
 	fill_buffer_to_console();
 	setcolor(7, 0);
-	gotoxy(17, 5);
+	gotoxy(19, 5);
 	printf("LEADERBOARD");
 	bool leader = true;
 	FILE* fp = fopen("Leaderscore.txt", "r");
 	int c = 0;
-	gotoxy(7, 8);
-	printf("Name		     	  Score");
+	gotoxy(10, 8);
+	printf("Name		     	     Score");
 	for (int i = 1; i < 6; i++) {
-		char a[20];
+		char a[40];
 		long b;
 		fscanf(fp, "%s %ld", a, &b);
 		long d = b;
 		int count = 0;
-		gotoxy(4, 10 + c);
-		if (b == -1) printf("%d. -			    -", i);
+		gotoxy(7, 10 + c);
+		if (b == -1) printf("%d. -			 	 -", i);
 		else {
 			while (d != 0) {
 				d = d / 10;
 				count += 1;
 			}
 			printf("%d. %s", i, a);
-			gotoxy(39 - count, 10 + c);
+			gotoxy(42 - count, 10 + c);
 			printf("%ld\n\n", b);
 		}
 		c += 3;
 	}
-	gotoxy(4, 28);
+	gotoxy(7, 28);
 	printf("Back");
 	while (leader) {
 		setcolor(7, 0);
@@ -831,7 +969,7 @@ void leaderboard() {
 					int posx = eventBuffer[i].Event.MouseEvent.dwMousePosition.X;
 					int posy = eventBuffer[i].Event.MouseEvent.dwMousePosition.Y;
 					if (eventBuffer[i].Event.MouseEvent.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED) {
-						if (posx >= 4 && posx <= 7 && posy == 28) leader = false;
+						if (posx >= 7 && posx <= 10 && posy == 28) leader = false;
 					}
 					else if (eventBuffer[i].Event.MouseEvent.dwButtonState &
 						RIGHTMOST_BUTTON_PRESSED) {
@@ -839,13 +977,13 @@ void leaderboard() {
 					else if (eventBuffer[i].Event.MouseEvent.dwEventFlags & MOUSE_MOVED) {
 
 					}
-					if (posx >= 4 && posx <= 7 && posy == 28) {
-						gotoxy(4, 28);
+					if (posx >= 7 && posx <= 10 && posy == 28) {
+						gotoxy(7, 28);
 						setcolor(0, 7);
 						printf("Back");
 					}
 					else {
-						gotoxy(4, 28);
+						gotoxy(7, 28);
 						setcolor(7, 0);
 						printf("Back");
 					}
@@ -897,15 +1035,15 @@ int main() {
 			fill_buffer_to_console();
 			TETRIS();
 			fill_buffer_to_console();
-			gotoxy(20, 15);
+			gotoxy(22, 15);
 			setcolor(7, 0);
 			printf("START");
-			gotoxy(17, 20);
+			gotoxy(19, 20);
+			setcolor(7, 0);
 			printf("LEADERBOARD");
-			gotoxy(21, 25);
+			gotoxy(23, 25);
+			setcolor(7, 0);
 			printf("EXIT");
-			gotoxy(2, 33);
-			printf("Saranthorn Pornchaiwattanakorn  64010827");
 		}
 		if (numEvents != 0) {
 			INPUT_RECORD* eventBuffer = new INPUT_RECORD[numEvents];
@@ -921,14 +1059,14 @@ int main() {
 					int posy = eventBuffer[i].Event.MouseEvent.dwMousePosition.Y;
 					if (eventBuffer[i].Event.MouseEvent.dwButtonState &
 						FROM_LEFT_1ST_BUTTON_PRESSED) {
-						if ((posx >= 20 && posx <= 25) && posy == 15) {
+						if ((posx >= 22 && posx <= 26) && posy == 15) {
 							play = true;
 						}
-						else if ((posx >= 17 && posx <= 27) && posy == 20) {
+						else if ((posx >= 19 && posx <= 29) && posy == 20) {
 							leaderboard();
 							startmenuloop = false;
 						}
-						else if ((posx >= 21 && posx <= 24) && posy == 25) {
+						else if ((posx >= 19 && posx <= 26) && posy == 25) {
 							start = false;
 						}
 					}
@@ -936,29 +1074,29 @@ int main() {
 						RIGHTMOST_BUTTON_PRESSED) {
 					}
 					else if (eventBuffer[i].Event.MouseEvent.dwEventFlags & MOUSE_MOVED) {
-						if ((posx >= 20 && posx <= 25) && posy == 15) {
-							gotoxy(20, 15);
+						if ((posx >= 22 && posx <= 26) && posy == 15) {
+							gotoxy(22, 15);
 							setcolor(0, 7);
 							printf("START");
 						}
-						else if ((posx >= 17 && posx <= 27) && posy == 20) {
-							gotoxy(17, 20);
+						else if ((posx >= 19 && posx <= 29) && posy == 20) {
+							gotoxy(19, 20);
 							setcolor(0, 7);
 							printf("LEADERBOARD");
 						}
-						else if ((posx >= 21 && posx <= 24) && posy == 25) {
-							gotoxy(21, 25);
+						else if ((posx >= 23 && posx <= 26) && posy == 25) {
+							gotoxy(23, 25);
 							setcolor(0, 7);
 							printf("EXIT");
 						}
 						else {
-							gotoxy(20, 15);
+							gotoxy(22, 15);
 							setcolor(7, 0);
 							printf("START");
-							gotoxy(17, 20);
+							gotoxy(19, 20);
 							setcolor(7, 0);
 							printf("LEADERBOARD");
-							gotoxy(21, 25);
+							gotoxy(23, 25);
 							setcolor(7, 0);
 							printf("EXIT");
 						}
@@ -970,17 +1108,16 @@ int main() {
 		if (play == true) {
 			clear_buffer();
 			fill_buffer_to_console();
-			char playername[100];
+			char playername[40];
 			setcursor(1);
 			setcolor(7, 0);
-			gotoxy(10, 12);
-			printf("Enter your player name\n\n\n\n");
-			gotoxy(9, 16);
-			printf("|			|");
-			gotoxy(7, 20);
-			printf("Press Enter to start the game");
+			gotoxy(13, 12);
+			printf("Enter your player name\n\n\n\n	 ");
+
+			printf("|				|");
 			gotoxy(10, 16);
-			scanf("%s", playername);
+			scanf("%s", &playername);
+			gotoxy(10, 16);
 			setcursor(0);
 			//fonts(10, 10);
 			for (int yi = 0; yi < 32; yi++) {
@@ -1008,15 +1145,13 @@ int main() {
 				GetNumberOfConsoleInputEvents(rHnd, &numEvents);
 				if (score >= 2500 && deblevel == 550) deblevel -= 100;
 				else if (score >= 10000 && deblevel == 450) deblevel -= 100;
-				else if (score >= 25000 && deblevel == 350) deblevel -= 100;
-				else if (score >= 50000 && deblevel == 250) deblevel -= 50;
-				else if (score >= 100000 && deblevel == 200) deblevel -= 50;
-				else if (score >= 350000 && deblevel == 150) deblevel -= 50;
+				else if (score >= 50000 && deblevel == 350) deblevel -= 100;
+				else if (score >= 100000 && deblevel == 250) deblevel -= 50;
+				else if (score >= 250000 && deblevel == 200) deblevel -= 50;
+				else if (score >= 500000 && deblevel == 150) deblevel -= 50;
 				else if (score >= 750000 && deblevel == 100) deblevel -= 25;
-				else if (score >= 1500000 && deblevel == 75) deblevel -= 25;
+				else if (score >= 1000000 && deblevel == 75) deblevel -= 25;
 				int le = level(deblevel);
-				long nl = nextlevel(&score);
-				
 				if (deb >= deblevel) {
 					deb = 0;
 					Block(BlockNum, rotation, xBlock, yBlock, 1);
@@ -1027,17 +1162,14 @@ int main() {
 					Block(BlockNum, rotation, xBlock, yBlock, 2);
 					if (Block(BlockNum, rotation, xBlock, yBlock, 2) == 2) {
 						bool gameover = true;
-						if (gameover == true) {
+						gameoverdisplay(&gameover);
+						if (gameover == false) {
 							FILE* fp;
-							char player[5][20];
+							char player[5][40];
 							long sc[5];
 							int i = 0;
-							char temp[15];
+							char temp[40];
 							long stemp;
-							for (int k = 15; k < 100; k++) {
-								playername[k] = '\0';
-							}
-							i = 0;
 							fp = fopen("Leaderscore.txt", "r");
 							while (!feof(fp)) {
 								fscanf(fp, "%s %ld", player[i], &sc[i]);
@@ -1053,7 +1185,7 @@ int main() {
 								}
 							}
 							for (int j = i + 1; j < 5; j++) {
-								char tempj[15];
+								char tempj[40];
 								long stempj;
 								strcpy(tempj, player[j]);
 								stempj = sc[j];
@@ -1068,10 +1200,9 @@ int main() {
 								fprintf(fp, "%s %ld\n", player[i], sc[i]);
 							}
 							fclose(fp);
+							play = false;
+							startmenuloop = false;
 						}
-						gameoverdisplay(&gameover);
-						play = false;
-						startmenuloop = false;
 						clear_buffer();
 						fill_buffer_to_console();
 						if (startmenuloop == false) break;
@@ -1089,12 +1220,6 @@ int main() {
 						score = score + ((bcc - 2) * (bcc - 2) * 150) + (bcc - 2) * 250 * le;
 						BlockTransition();
 						fill_buffer_to_console();
-						/*for (int yi = 1; yi < 29; yi++) {
-							for (int xi = 3; xi < 16; xi++) {
-								consoleBuffer[xi + screen_x * yi].Char.AsciiChar = bt[yi].px[xi];
-								consoleBuffer[xi + screen_x * yi].Attributes = bt[yi].cb[xi];
-							}
-						}*/
 					}
 					xBlock = 5 + rand() % 7;
 					yBlock = -9;
@@ -1115,73 +1240,81 @@ int main() {
 					ReadConsoleInput(rHnd, eventBuffer, numEvents, &numEventsRead);
 					for (DWORD i = 0; i < numEventsRead; ++i) {
 						if (eventBuffer[i].EventType == KEY_EVENT && eventBuffer[i].Event.KeyEvent.bKeyDown == true) {
-							
 							if (eventBuffer[i].Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) {
 								pause = true;
-								pausemenu(&pause, &play, &startmenuloop,nl);
-								if (pause == false) {
-
-								}
+								pausemenu(&pause, &play, &startmenuloop);
 							}
-							else if (eventBuffer[i].Event.KeyEvent.wVirtualKeyCode == 77 ) {
-								score += 10000;
+							else if (eventBuffer[i].Event.KeyEvent.wVirtualKeyCode == 99 || eventBuffer[i].Event.KeyEvent.wVirtualKeyCode == 67) {
+
 							}
 							else if (eventBuffer[i].Event.KeyEvent.wVirtualKeyCode == KEY_UP) {
 								int cc = xBlock;
 								Block(BlockNum, rotation, xBlock, yBlock, 1);
 								rotation += 1;
 								if (rotation == 4) rotation = 0;
-								int countloop = 0;
-								while (Block(BlockNum, rotation, xBlock, yBlock, 1) == 1) {
-									countloop++;
-									if (Block(BlockNum, rotation, xBlock + 1, yBlock, 1) == 1 && Block(BlockNum, rotation, xBlock - 1, yBlock, 1) == 1) rotation -= 1;
-									else {
-										if (cc > 10) {
-											--xBlock;
-											if (countloop > 2) {
-												rotation -= 1;
-												xBlock = xBlock + countloop;
-												break;
-											}
-										}
-										else if(cc<3){
-											++xBlock;
-											countloop++;
-											if (countloop > 2) {
-												rotation -= 1;
+								if (Block(BlockNum, rotation, xBlock, yBlock, 1) == 1) {
+									int countloop = 0;
+									BLOCKTEMP(BlockNum, rotation, xBlock, yBlock, 1);
+									if (checkleft == 1 && checkmiddle == 0) {
+										while (checkleft == 1) {
+											countloop += 1;
+											xBlock+=1;
+											BLOCKTEMP(BlockNum, rotation, xBlock, yBlock, 1);
+											if (checkmiddle == 1) {
 												xBlock = xBlock - countloop;
+												rotation -= 1;
 												break;
-											}
-										}
-										else {
-											bool trytodosomething = true;
-											bool trytomakesomething = true;
-											if (trytodosomething == true) {
-												xBlock += 1;
-												if (Block(BlockNum, rotation, xBlock, yBlock, 1) == 0) {
-													trytodosomething = false;
-													trytomakesomething = false;
-													break;
-												}
-												else xBlock -= 1;
-											}
-											else if (trytomakesomething) {
-												xBlock -= 1;
-												if (Block(BlockNum, rotation, xBlock, yBlock, 1) == 0) {
-													trytodosomething = false;
-													trytomakesomething = false;
-													break;
-												}
-												else xBlock += 1;
 											}
 										}
 									}
-									if (countloop > 2) {
+									else if (checkleft == 1 && checkmiddle == 1) {
 										rotation -= 1;
-										break;
+									}
+									else if (checkright == 1 && checkmiddle == 0) {
+										while (checkright == 1) {
+											countloop += 1;
+											xBlock -= 1;
+											BLOCKTEMP(BlockNum, rotation, xBlock, yBlock, 1);
+											if (checkmiddle == 1) {
+												xBlock = xBlock + countloop;
+												rotation -= 1;
+												break;
+											}
+										}
+									}
+									else if (checkright == 1 && checkmiddle == 1) {
+										rotation -= 1;
+									}
+									else if (checkmiddle == 1) {
+										if (checkmiddleleft == 1 && checkmiddleright == 1) rotation -= 1;
+										else if (checkmiddleleft == 1 && checkmiddleright == 0) {
+											while (checkmiddleleft == 1) {
+												countloop += 1;
+												xBlock += 1;
+												BLOCKTEMP(BlockNum, rotation, xBlock, yBlock, 1);
+												if (checkmiddleright == 1 || checkright == 1) {
+													xBlock = xBlock - countloop;
+													rotation -= 1;
+													break;
+												}
+											}
+										}
+										else if (checkmiddleleft == 0 && checkmiddleright == 1) {
+											while (checkmiddleright == 1) {
+												countloop += 1;
+												xBlock -= 1;
+												BLOCKTEMP(BlockNum, rotation, xBlock, yBlock, 1);
+												if (checkmiddleleft == 1 || checkleft == 1) {
+													xBlock = xBlock + countloop;
+													rotation -= 1;
+													break;
+												}
+											}
+										}
 									}
 									if (rotation == -1) rotation = 3;
 								}
+								
 							}
 							else if (eventBuffer[i].Event.KeyEvent.wVirtualKeyCode == KEY_RIGHT && yBlock > -6) {
 								Block(BlockNum, rotation, xBlock, yBlock, 1);
@@ -1214,17 +1347,11 @@ int main() {
 							else if (eventBuffer[i].Event.MouseEvent.dwEventFlags & MOUSE_MOVED) {
 							}
 						}
-
 					}
-
 					delete[] eventBuffer;
 				}
 				deb += 50;
 				point(&score);
-				gotoxy(23, 18);
-				setcolor(7, 0);
-				if (nl != -1) printf("%ld", nl);
-				else if (nl == -1) printf("  LEVEL MAX");
 				Sleep(50);
 				setcolor(7, 0);
 			}
